@@ -1,38 +1,130 @@
-# Analiza danych inżynierskich z wykorzystaniem języka Python
-_data analysis for engineers_
+# Programowanie w języku Python dla inżynierów
 
-# Python examples
+Python course materials for engineering master's students.
 
-Welcome to our comprehensive repository dedicated to the "Python for Engineers" course for master's students. This repository is a curated collection of examples, code, and resources designed to enhance learning and provide practical insights into the application of Python in engineering and data science.
+## Preparation of the repository for laboratory class
 
-### Natural Language Processing with Huggingface 🤗📖
-- **Repository:** [mmysior/transformers-nlp](https://github.com/mmysior/transformers-nlp)
-- **Description:** Explore natural language processing examples using the Huggingface library. Dive into the world of transformers and how they revolutionize NLP.
+Before starting, make sure you have the following installed:
+- **uv**
+- **Visual Studio Code**
+- **Git**
 
-### Machine Learning with Scikit-learn: Titanic Survival Prediction 🤖🚢
-- **Repository:** [mmysior/kaggle-titanic](https://github.com/mmysior/kaggle-titanic)
-- **Description:** A classification example utilizing the Scikit-learn library to predict Titanic survivors. A great starting point for understanding machine learning basics.
+## Setup
 
-### Data Analysis in Python: The History of LEGO 📊🐍
-- **Repository:** [mmysior/lego-history](https://github.com/mmysior/lego-history)
-- **Description:** An engaging example of data analysis in Python, exploring the history and evolution of LEGO sets. Perfect for data enthusiasts.
+### 1. Clone the Repository
 
-### Perceptron Implementation in Python 🧠🐍
-- **Repository:** [mmysior/perceptron](https://github.com/mmysior/perceptron)
-- **Description:** Implement a perceptron, a fundamental building block of deep neural networks, in Python. A hands-on introduction to neural networks.
+Clone this repository into a folder named with your **student index number**.
 
-### Machine Learning Fundamentals 🤖📚
-- **Repository:** [w10k57-education/ml-fundamentals](https://github.com/w10k57-education/ml-fundamentals)
-- **Description:** Examples of supervised (classification and regression) and unsupervised learning (clustering). A foundation for understanding the core concepts of machine learning.
+Replace `123456` with your actual index number:
 
-### Python Code for Calculating Bolted Connection Parameters 🐍💻
-- **Repository:** [w10k57-education/bolted-connections](https://github.com/w10k57-education/bolted-connections)
-- **Description:** Python code for calculating basic parameters of bolted connections. Essential for engineers designing mechanical connections.
+```bash
+git clone https://github.com/w10k57-git/python-for-engineers.git 123456
+cd 123456
+```
 
-### Innovation Assessment Repo 💡📊
-- **Repository:** [Innovation-Assessment Repo](https://github.com/w10k57-education/innovation-assesment)
-- **Description:** A complete and published repository with a Binder image. An innovative approach to presenting and sharing educational content.
+**Example:** If your index number is `987654`, you would run:
+```bash
+git clone https://github.com/w10k57-git/python-for-engineers.git 987654
+cd 987654
+```
+
+### 2. Install Dependencies
+
+```bash
+uv sync
+```
+
+### 3. Configure Git
+
+```bash
+git config user.name "Your Name"
+git config user.email "your.email@example.com"
+```
+
+Verify your configuration:
+```bash
+git config user.name
+git config user.email
+```
+
+### 4. Create Your Working Branch
+
+```bash
+git checkout -b lab
+```
+
+**Important:** All students work on the `lab` branch. Never commit to `main`!
+
+## Daily Workflow
+
+### Getting Instructor Updates
+
+When the instructor publishes new materials:
+
+```bash
+git checkout main
+git pull origin main
+git checkout lab
+git merge main
+```
+
+### Working on Tasks
+
+All your work should be done in the `tasks/` directory:
+
+```bash
+cd tasks/
+uv run python your_script.py
+```
+
+### Committing Your Work
+
+```bash
+git add .
+git commit -m "Complete task XYZ"
+```
+
+**Note:** Your work stays local. You don't push to the remote repository.
+
+## Examples
+
+
+
+## Repository Structure
+
+```
+123456/  (your index number)
+├── examples/       # Code examples and exercises
+├── tasks/          # YOUR workspace - work here!
+├── src/            # Utility functions you can use
+└── data/           # Data files for the course
+```
+
+## Git Workflow Summary
+
+- **`main`** - Course materials from instructor (read-only)
+- **`lab`** - Your working branch (all students use this name)
+
+### Key Commands
+
+```bash
+# Check status
+git status
+
+# View history
+git log --oneline
+
+# See changes
+git diff
+```
+
+## Complete Setup Checklist
+
+- [ ] Clone repository into folder named with your index number
+- [ ] Run `uv sync` to install dependencies
+- [ ] Configure `git config user.name` and `git config user.email`
+- [ ] Create `lab` branch with `git checkout -b lab`
 
 ---
 
-This repository is a treasure trove of resources for engineering students interested in applying Python in their studies and future careers. Dive in, explore, and let the learning begin! 🚀
+Happy coding! 🚀
