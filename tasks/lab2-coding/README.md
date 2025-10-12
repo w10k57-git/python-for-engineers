@@ -1,261 +1,172 @@
-# Laboratory 2: Beam Analysis - Programming Tasks
+# Laboratorium 2: ćwiczenia z programowania
 
-## Introduction
+Na tym laboratorium, nauczysz się programować proste skrypty wspomagające obliczenia inżynierskie z zakresu projektowania i analizy belek zginanych. Celem laboratorium jest przygotowanie dwóch funkcji, `analyze_3p` oraz `analyze_4p`, które umożliwią wyznaczenie sił reakcji, maksymalnego momentu gnącego i siły tnącej, oraz ugięcia i naprężenia gnącego w belce zginanej trzy i czteropunktowo. Każda funkcja powinna zwracać obiekt typu `BeamResults`.
 
-Welcome to your first programming laboratory! In this lab, you will write Python functions to solve common beam analysis problems. These are real engineering calculations that you'll use throughout your career. Those functions are very useful from the point of view of building the engineering toolbox for Large Language Models. 
+**Do zaliczenia laboratorium, konieczne jest przygotowanie sprawozdania dokumentującego działanie funkcji `analyze_3p` oraz `analyze_4p`, wraz z przykładem użycia na wybranych przykładach.**
 
----
+## Definicja Klasy Danych
 
-## Task Group 1: Beam Analysis
-
-In this group of tasks, you will analyze beams under different loading conditions, calculating reaction forces, maximum bending moments, and maximum shear forces.
-
-### Data Class Definition
-
-For Tasks 1.2, 1.3, and 1.4, you will use the following dataclass to return results. Add this at the top of your Python file:
+Dodaj to na początku pliku Python:
 
 ```python
 from dataclasses import dataclass
 
 @dataclass
 class BeamResults:
-    """Results from beam analysis"""
-    R1: float      # Reaction force at left support [N]
-    R2: float      # Reaction force at right support [N]
-    M_max: float   # Maximum bending moment [N·mm]
-    V_max: float   # Maximum shear force [N]
+    """Wyniki analizy belki"""
+    R1: float                    # Siła reakcji w lewej podporze [N]
+    R2: float                    # Siła reakcji w prawej podporze [N]
+    M_max: float                 # Maksymalny moment gnący [N·mm]
+    V_max: float                 # Maksymalna siła tnąca [N]
+    L: float                     # Rozpiętość [mm]
+    P: float                     # Obciążenie przyłożone [N]
+    max_deflection: float | None = None       # Maksymalne ugięcie [mm]
+    max_bending_stress: float | None = None   # Maksymalne napr. gnące [MPa]
 ```
 
 ---
 
-### Task 1.1: Three-Point Bending - Symmetric Load (Simple Calculation)
+## Podstawowe obliczenia dla belek
 
-A simply supported beam with span `L` has a single point load `F` applied at the center of the beam (symmetric loading). Write a function `max_moment_3p_symmetric(F, L)` that calculates the maximum bending moment in the beam.
+**Zadanie 1.1**. Belka swobodnie podparta o rozpiętości `L` ma przyłożoną pojedynczą siłę skupioną `F` w środku belki (obciążenie symetryczne). Napisz funkcję `max_moment_3p_symmetric(F, L)`, która oblicza maksymalny moment gnący w belce.
 
-**Parameters:**
-- `F` - applied force [N]
-- `L` - span length (distance between supports) [mm]
-
-**Returns:**
-- Maximum bending moment [N·mm] (just a single number)
-
-**Hints:**
-- Since the load is centered, the reaction forces are equal: R1 = R2 = F/2
-- The maximum moment occurs at the center where the load is applied
-- Use the formula for bending moment at the center of a simply supported beam
-
-**Example:**
 ```python
-# For F = 1000 N, L = 1000 mm
+# Dla F = 1000 N, L = 1000 mm
 M_max = max_moment_3p_symmetric(1000, 1000)
-# Expected result: M_max = 250000 N·mm
-print(f"Maximum moment: {M_max} N·mm")
+# Oczekiwany wynik: M_max = 250000 N·mm
+print(f"Maksymalny moment: {M_max} N·mm")
 ```
 
 ---
 
-### Task 1.2: Three-Point Bending - Symmetric Load (Full Analysis)
+**Zadanie 1.2**. Belka swobodnie podparta o rozpiętości `L` ma pojedynczą siłę skupioną `F` w środku. Napisz funkcję `analyze_3p_symmetric(F, L)`, która przeprowadza pełną analizę belki i zwraca obiekt `BeamResults`.
 
-Same setup as Task 1.1: a simply supported beam with span `L` and a single point load `F` at the center. Write a function `analyze_3p_symmetric(F, L)` that performs a complete beam analysis and returns a `BeamResults` object containing all reaction forces and maximum values.
-
-**Parameters:**
-- `F` - applied force [N]
-- `L` - span length (distance between supports) [mm]
-
-**Returns:**
-- `BeamResults` object containing:
-  - `R1` - reaction at left support [N]
-  - `R2` - reaction at right support [N]
-  - `M_max` - maximum bending moment [N·mm]
-  - `V_max` - maximum shear force [N]
-
-**Hints:**
-- Calculate the reaction forces using equilibrium equations
-- The maximum shear force is equal to the larger reaction force
-- For symmetric loading, R1 = R2, so V_max = F/2
-
-**Example:**
 ```python
-# For F = 1000 N, L = 1000 mm
+# Dla F = 1000 N, L = 1000 mm
 result = analyze_3p_symmetric(1000, 1000)
 print(f"R1 = {result.R1} N")
 print(f"R2 = {result.R2} N")
 print(f"M_max = {result.M_max} N·mm")
 print(f"V_max = {result.V_max} N")
-# Expected: R1 = 500 N, R2 = 500 N, M_max = 250000 N·mm, V_max = 500 N
+# Oczekiwane: R1 = 500 N, R2 = 500 N, M_max = 250000 N·mm, V_max = 500 N
 ```
 
 ---
 
-### Task 1.3: Three-Point Bending - General Case (3P General)
+**Zadanie 1.3**. Belka swobodnie podparta o rozpiętości `L` ma pojedynczą siłę skupioną `F`. Obciążenie może być umieszczone w dowolnym miejscu wzdłuż belki za pomocą parametru `offset`, który przesuwa obciążenie od pozycji środkowej. Napisz funkcję `analyze_3p(F, L, offset=0)`, która przeprowadza pełną analizę belki i zwraca obiekt `BeamResults`. Funkcja musi walidować dane wejściowe: sprawdzić, że `L > 0` oraz że pozycja obciążenia `a = L/2 + offset` spełnia warunek `0 < a < L`. Jeśli walidacja się nie powiedzie, zgłoś `ValueError`.
 
-A simply supported beam with span `L` has a single point load `F`. The load can be positioned anywhere along the beam using an `offset` parameter that shifts the load from the center position. Write a function `analyze_3p(F, L, offset=0)` that performs a complete beam analysis and returns a `BeamResults` object.
-
-**Parameters:**
-- `F` - applied force [N]
-- `L` - span length (distance between supports) [mm]
-- `offset` - distance from center of beam to the load [mm] (default: 0)
-  - `offset = 0`: load at center (symmetric)
-  - `offset > 0`: load shifted toward right support
-  - `offset < 0`: load shifted toward left support
-
-**Returns:**
-- `BeamResults` object containing:
-  - `R1` - reaction at left support [N]
-  - `R2` - reaction at right support [N]
-  - `M_max` - maximum bending moment [N·mm]
-  - `V_max` - maximum shear force [N]
-
-**Important - Input Validation:**
-Your function must validate the inputs before performing calculations:
-- Check that `F > 0` (force must be positive)
-- Check that `L > 0` (span must be positive)
-- Calculate the load position: `a = L/2 + offset`
-- Check that `0 < a < L` (load must be between the supports)
-- If any validation fails, raise a `ValueError` with a descriptive error message
-
-**Hints:**
-- First validate all inputs
-- Calculate load position: `a = L/2 + offset`
-- Calculate the reaction forces R1 and R2 using equilibrium equations (sum of forces = 0, sum of moments = 0)
-- The maximum moment occurs at the point of load application
-- The maximum shear force is the larger of R1 and R2
-
-**Example:**
 ```python
-# Symmetric case (offset = 0)
+# Przypadek symetryczny (offset = 0)
 result = analyze_3p(1000, 1000)
 print(f"R1 = {result.R1} N, R2 = {result.R2} N")
-# Expected: R1 = 500 N, R2 = 500 N
+# Oczekiwane: R1 = 500 N, R2 = 500 N
 
-# Asymmetric case (offset = -100 mm, load shifted left from center)
+# Przypadek asymetryczny (offset = -100 mm, obciążenie przesunięte w lewo od środka)
 result = analyze_3p(1000, 1000, offset=-100)
 print(f"R1 = {result.R1} N")
 print(f"R2 = {result.R2} N")
 print(f"M_max = {result.M_max} N·mm")
 print(f"V_max = {result.V_max} N")
-# Expected: R1 = 600 N, R2 = 400 N, M_max = 240000 N·mm, V_max = 600 N
+# Oczekiwane: R1 = 600 N, R2 = 400 N, M_max = 240000 N·mm, V_max = 600 N
 
-# Invalid input should raise an error
+# Nieprawidłowe dane wejściowe powinny zgłosić błąd
 try:
-    result = analyze_3p(1000, 1000, offset=600)  # Load outside beam!
+    result = analyze_3p(1000, 1000, offset=600)  # Obciążenie poza belką!
 except ValueError as e:
-    print(f"Error: {e}")
+    print(f"Błąd: {e}")
 ```
 
 ---
 
-### Task 1.4: Four-Point Bending - General Case (4P General)
+**Zadanie 1.4**. Belka swobodnie podparta o rozpiętości `L` ma dwie równe siły skupione `F`. Obciążenia są oddzielone odległością `spacing` i mogą być przesuwane wzdłuż belki za pomocą parametru `offset`. Napisz funkcję `analyze_4p(F, L, spacing, offset=0)`, która przeprowadza pełną analizę belki i zwraca obiekt `BeamResults`. Funkcja musi walidować dane wejściowe: sprawdzić, że `L > 0`, `spacing > 0` oraz że obie pozycje obciążeń `a = L/2 - spacing/2 + offset` i `b = L/2 + spacing/2 + offset` spełniają warunek `0 < a < b < L`. Jeśli walidacja się nie powiedzie, zgłoś `ValueError`.
 
-A simply supported beam with span `L` has two equal point loads `F`. The loads are separated by a distance `spacing` and can be shifted along the beam using an `offset` parameter. By default (offset = 0), the loads are positioned symmetrically about the beam's center. Write a function `analyze_4p(F, L, spacing, offset=0)` that performs a complete beam analysis and returns a `BeamResults` object.
-
-**Parameters:**
-- `F` - applied force (each load) [N]
-- `L` - span length (distance between supports) [mm]
-- `spacing` - distance between the two loads [mm]
-- `offset` - distance from center of beam to center of load pair [mm] (default: 0)
-  - `offset = 0`: loads symmetric about beam center
-  - `offset > 0`: load pair shifted toward right support
-  - `offset < 0`: load pair shifted toward left support
-
-**Returns:**
-- `BeamResults` object containing:
-  - `R1` - reaction at left support [N]
-  - `R2` - reaction at right support [N]
-  - `M_max` - maximum bending moment [N·mm]
-  - `V_max` - maximum shear force [N]
-
-**Important - Input Validation:**
-Your function must validate the inputs before performing calculations:
-- Check that `F > 0` (force must be positive)
-- Check that `L > 0` (span must be positive)
-- Check that `spacing > 0` (loads must be separated)
-- Calculate load positions:
-  - `a = L/2 - spacing/2 + offset` (first load)
-  - `b = L/2 + spacing/2 + offset` (second load)
-- Check that `0 < a < b < L` (both loads must be between supports)
-- If any validation fails, raise a `ValueError` with a descriptive error message
-
-**Hints:**
-- First validate all inputs
-- Calculate both load positions from the spacing and offset
-- In 4-point bending with equal loads positioned symmetrically, the reactions are equal: R1 = R2 = F
-- The maximum moment occurs in the region between the two loads (constant in that region)
-- The maximum shear force equals the reaction forces
-
-**Example:**
 ```python
-# Symmetric case (offset = 0, spacing = 600 mm)
+# Przypadek symetryczny (offset = 0, spacing = 600 mm)
 result = analyze_4p(1000, 1200, 600)
 print(f"R1 = {result.R1} N, R2 = {result.R2} N")
 print(f"M_max = {result.M_max} N·mm")
-# Expected: R1 = 1000 N, R2 = 1000 N, M_max = 300000 N·mm
+# Oczekiwane: R1 = 1000 N, R2 = 1000 N, M_max = 300000 N·mm
 
-# Asymmetric case (offset = 100 mm, loads shifted right)
+# Przypadek asymetryczny (offset = 100 mm, obciążenia przesunięte w prawo)
 result = analyze_4p(1000, 1200, 600, offset=100)
 print(f"R1 = {result.R1} N")
 print(f"R2 = {result.R2} N")
 print(f"M_max = {result.M_max} N·mm")
 print(f"V_max = {result.V_max} N")
 
-# Invalid input should raise an error
+# Nieprawidłowe dane wejściowe powinny zgłosić błąd
 try:
-    result = analyze_4p(1000, 1200, 1000)  # Spacing too large!
+    result = analyze_4p(1000, 1200, 1000)  # Rozstaw zbyt duży!
 except ValueError as e:
-    print(f"Error: {e}")
+    print(f"Błąd: {e}")
 ```
 
 ---
 
-## Testing Your Functions
+## Analiza naprężeń i ugięć belki
 
-Create a Python file (e.g., `beam_analysis.py`) and implement all four functions. Test them with the provided examples to verify your calculations.
-
-You can test your functions like this:
+Opierając się na Grupie 1, zintegrujesz teraz właściwości materiałowe i geometrię przekroju z analizą belki. Wykorzystując programowanie obiektowe, stworzysz klasy przekrojów reprezentujące różne kształty belek. Pozwoli to na obliczanie ugięć i naprężeń, które są kluczowe dla określenia, czy projekt belki spełnia wymagania bezpieczeństwa. Ta grupa pokazuje, jak inżynierowie łączą różne aspekty (geometrię, materiały, obciążenia) w celu oceny właściwości konstrukcyjnych. Przed rozpoczęciem pracy, zdefiniuj **abstrakcyjną klasę bazową (ABC)**, która będzie stanowiła wzór dla dziedziczonych klas przekrojów.
 
 ```python
-# Test Task 1.1 - Simple calculation
-M_max = max_moment_3p_symmetric(1000, 1000)
-print(f"Task 1.1 - Max Moment: {M_max} N·mm\n")
+from dataclasses import dataclass
+from abc import ABC, abstractmethod
 
-# Test Task 1.2 - Full analysis (symmetric)
-result = analyze_3p_symmetric(1000, 1000)
-print(f"Task 1.2:")
-print(f"  R1 = {result.R1} N, R2 = {result.R2} N")
-print(f"  M_max = {result.M_max} N·mm, V_max = {result.V_max} N\n")
+@dataclass
+class Section(ABC):
+    """Abstrakcyjna klasa bazowa dla przekrojów belek"""
+    E: float      # Moduł Younga [MPa]
+    nu: float     # Współczynnik Poissona [-]
+    rho: float    # Gęstość materiału [kg/m³]
 
-# Test Task 1.3 - 3P with offset
-result = analyze_3p(1000, 1000)  # Default offset=0
-print(f"Task 1.3 (symmetric):")
-print(f"  R1 = {result.R1} N, R2 = {result.R2} N")
-print(f"  M_max = {result.M_max} N·mm, V_max = {result.V_max} N")
+    @abstractmethod
+    def area(self) -> float:
+        """Pole przekroju [mm²]"""
+        pass
 
-result = analyze_3p(1000, 1000, offset=-100)  # Offset to the left
-print(f"Task 1.3 (asymmetric):")
-print(f"  R1 = {result.R1} N, R2 = {result.R2} N")
-print(f"  M_max = {result.M_max} N·mm, V_max = {result.V_max} N\n")
+    @abstractmethod
+    def I_xx(self) -> float:
+        """Moment bezwładności względem osi x-x (poziomej) [mm⁴]"""
+        pass
 
-# Test Task 1.4 - 4P with spacing and offset
-result = analyze_4p(1000, 1200, 600)  # Default offset=0
-print(f"Task 1.4 (symmetric):")
-print(f"  R1 = {result.R1} N, R2 = {result.R2} N")
-print(f"  M_max = {result.M_max} N·mm, V_max = {result.V_max} N")
+    @abstractmethod
+    def W_xx(self) -> float:
+        """Wskaźnik wytrzymałości przekroju względem osi x-x [mm³]"""
+        pass
 ```
 
----
-**Good luck!** 🔧
+**Zadanie 2.1**. Zaimplementuj dwie różne klasy przekrojów dziedziczące po `Section`. Każda klasa musi implementować trzy metody abstrakcyjne: `area()`, `I_xx()` i `W_xx()`. Wybierz dowolne dwa kształty przekrojów (np. prostokątny, kołowy, dwuteownik, rura, itp.).
 
+```python
+# Przykład użycia z wybranymi przekrojami
+section1 = TwojPierwszyPrzekroj(a=120, b=80, t=3, E=200000, nu=0.3, rho=7850)
+print(f"Przekrój 1 - Pole: {section1.area()} mm²")
+print(f"Przekrój 1 - I_xx: {section1.I_xx()} mm⁴")
+print(f"Przekrój 1 - W_xx: {section1.W_xx()} mm³")
 
-TA1: Calculate reaction forces in each of the supports.
-TA2: Calculate the maximum bending moment in the beam.
-TA3: Calculate the maximum deflection of the beam.
-TA4: Calculate the maximum bending stress.
-TA5: Calculate the maximum equivalent Huber-Mises-Hencky stress.
-TA6: Design a cross-section of the beam to satisfy the strength requirement regarding bending stress.
-Ensure optimum selection of the cross-section.
-TG1: Calculate the torque that must be applied to the screw to overcome the axial force of 3 kN
-present in the power screw mechanism. The thread is Tr16x2, d2 = 14.7mm, and the friction coefficient
-between the nut and the screw is 0.1.
-TG2: A gearbox receives an input at 1500 rev/min clockwise and delivers an output at 300 rev/min
-counterclockwise. The input power is 20 kW, and the mechanical efficiency of the gearbox is 70%.
-Calculate the output torque of the system.
+section2 = TwojDrugiPrzekroj(D=50, E=200000, nu=0.3, rho=7850)
+print(f"Przekrój 1 - Pole: {section2.area()} mm²")
+print(f"Przekrój 1 - I_xx: {section2.I_xx()} mm⁴")
+print(f"Przekrój 1 - W_xx: {section2.W_xx()} mm³")
+```
+
+**Zadanie 2.2**. Zmodyfikuj funkcję `analyze_3p`, aby przyjmowała opcjonalny parametr `section`. Gdy przekrój jest podany, oblicz maksymalne ugięcie i maksymalne naprężenie gnące.
+
+```python
+# Z przekrojem (NOWE zachowanie)
+steel_rect = RectangularSection(b=20, h=40, E=200_000, nu=0.3, rho=7850)
+result = analyze_3p(F=1000, L=1000, offset=0, section=steel_rect)
+print(f"M_max = {result.M_max} N·mm")
+print(f"Ugięcie = {result.max_deflection:.4f} mm")
+print(f"Naprężenie = {result.max_bending_stress:.2f} MPa")
+```
+
+**Zadanie 2.3**. Zmodyfikuj funkcję `analyze_4p`, aby przyjmowała opcjonalny parametr `section`. Gdy przekrój jest podany, oblicz maksymalne ugięcie i naprężenie gnące.
+
+```python
+# Z przekrojem
+steel_rect = RectangularSection(b=30, h=50, E=200_000, nu=0.3, rho=7850)
+result = analyze_4p(F=1000, L=1200, spacing=400, offset=0, section=steel_rect)
+print(f"M_max = {result.M_max} N·mm")
+print(f"Ugięcie = {result.max_deflection:.4f} mm")
+print(f"Naprężenie = {result.max_bending_stress:.2f} MPa")
+```
